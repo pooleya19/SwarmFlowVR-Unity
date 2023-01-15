@@ -33,8 +33,14 @@ namespace RosSharp.RosBridgeClient{
             if(connector.RosSocket == null) return;
             if(!connected){
                 connected = true;
-                object ret = typeof(RosSocket).GetMethod("Advertise").MakeGenericMethod(initialType).Invoke(connector.RosSocket, new object[]{topicName});
-                publisherID = (string) ret;
+                try{
+                    object ret = typeof(RosSocket).GetMethod("Advertise").MakeGenericMethod(initialType).Invoke(connector.RosSocket, new object[]{topicName});
+                    publisherID = (string) ret;
+                    //publisherID = CustomAdvertiser.CustomAdvertise(initialType, topicName, ref connector);
+                }catch(Exception ex){
+                    Debug.LogError("Advertisement Error.");
+                    Debug.LogError(ex.ToString());
+                }
             }
             
             if(message != null && Time.time - lastPublicationTime >= 1/topicFrequency){
@@ -42,11 +48,14 @@ namespace RosSharp.RosBridgeClient{
                 if(initialType != message.GetType()){
                     Debug.LogWarning("Incorrect Topic Message Type for Topic " + topicName + "; Target Message Type: " + initialType.ToString() + "; Requested Message Type: " + message.GetType().ToString());
                 }else{
-                    connector.RosSocket.Publish(publisherID,message);
+                    try{
+                        connector.RosSocket.Publish(publisherID,message);
+                    }catch(Exception ex){
+                        Debug.LogError("Publishing Error.");
+                        Debug.LogError(ex.ToString());
+                    }
                 }
             }
-        }
-
-        
+        }        
     }
 }
