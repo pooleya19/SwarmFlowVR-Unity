@@ -16,6 +16,13 @@ namespace RosSharp.RosBridgeClient{
         public static MessageTypes.Geometry.PointStamped getEmpty_GeometryPointStamped(Vector3 point, string frameID){
             return getEmpty_GeometryPointStamped(point.x, point.y, point.z, frameID);
         }
+
+        public static MessageTypes.Geometry.Twist getEmpty_GeometryTwist(Vector3 linear, Vector3 angular){
+            MessageTypes.Geometry.Vector3 newLinear = new MessageTypes.Geometry.Vector3{x = linear.x, y = linear.y, z = linear.z};
+            MessageTypes.Geometry.Vector3 newAngular = new MessageTypes.Geometry.Vector3{x = angular.x, y = angular.y, z = angular.z};
+            MessageTypes.Geometry.Twist newTwist = new MessageTypes.Geometry.Twist{linear = newLinear, angular = newAngular};
+            return newTwist;
+        }
     }
 
 }
