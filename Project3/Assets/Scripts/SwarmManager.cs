@@ -8,14 +8,15 @@ namespace RosSharp.RosBridgeClient{
 
     public class SwarmManager : MonoBehaviour
     {
-        [Header("GameObjects")]
+        [Header("GameObjects - OVR")]
         public GameObject GO_OVRPlayerController;
         public GameObject GO_OVRCameraRig;
         public GameObject GO_TrackingSpace;
         public GameObject GO_CenterEyeAnchor;
         public GameObject GO_ControllerLeft;
         public GameObject GO_ControllerRight;
-        public GameObject GO_ROSBot;
+
+        [Header("GameObjects - OVR")]
         public GameObject GO_Marker;
         public GameObject GO_World;
 
@@ -33,6 +34,9 @@ namespace RosSharp.RosBridgeClient{
         public Material MAT_line;
         public LayerMask UILayerMask;
         public Text Text_DebugData;
+        public GameObject Prefab_ROSBot;
+        public string ROSBotNamePrefix = "Rosbot";
+        public float ROSBotFloorYOffset = 0;
 
         private Vector3 targetWaypoint;
         private CustomSubscriber sub;
@@ -46,10 +50,15 @@ namespace RosSharp.RosBridgeClient{
         private Quaternion saveWorldRot;
         private Vector3 saveWorldScale;
 
+        // Line renderer and UI
         private LineRenderer lineRenderer;
         private int lineColorNum = 0;
         public bool click = false;
 
+        // Robots
+        private SwarmInterface swarmInterface;
+        private Dictionary<string, GameObject> dictROSBot;
+        private Dictionary<string, Vector3> dictTargetWaypoint;
         private string robotControlName = "";
 
         // Start is called before the first frame update
@@ -57,11 +66,19 @@ namespace RosSharp.RosBridgeClient{
         {
             targetWaypoint = new Vector3(0,0,0);
 
+            dictROSBot = new Dictionary<string, GameObject>();
+            dictTargetWaypoint = new Dictionary<string, Vector3>();
+
             if(enableROS){
+                swarmInterface = GetComponent<SwarmROSBridge>();
+                /*
                 sub = gameObject.AddComponent<CustomSubscriber>();
                 sub.Init<MessageTypes.Geometry.PoseStamped>(topicSubscribed);
                 pub = gameObject.AddComponent<CustomPublisher>();
                 pub.Init<MessageTypes.Geometry.Vector3>(topicPublished,10);
+                */
+            }else{
+                swarmInterface = GetComponent<SwarmSimulator>();
             }
 
             lineRenderer = GO_ControllerRight.AddComponent<LineRenderer>();
@@ -78,6 +95,44 @@ namespace RosSharp.RosBridgeClient{
         // Update is called once per frame
         void Update()
         {
+            // Parse through ROSBots using swarmInterface
+            foreach(string ROSBotID in swarmInterface.getROSBotIDs()){
+                // Handle position/rotation
+                Vector3 position = swarmInterface.getPosition(ROSBotID);
+                Quaternion rotation = swarmInterface.getRotation(ROSBotID);
+
+                // Check for unset position and skip
+                if(position == Vector3.positiveInfinity) continue;
+
+                GameObject ROSBot;
+                if(!dictROSBot.ContainsKey(ROSBotID)){
+                    // ROSBot doesn't exist, create it!
+                    ROSBot = Instantiate(Prefab_ROSBot, GO_World.transform);
+                    ROSBot.transform.localPosition = position;
+                    ROSBot.transform.localRotation = rotation;
+                    ROSBot.transform.name = ROSBotNamePrefix + ROSBotID;
+                    dictROSBot[ROSBotID] = ROSBot;
+                }else{
+                    ROSBot = dictROSBot[ROSBotID];
+                }
+
+                Vector3 flooredPos = position;
+                flooredPos.y = ROSBotFloorYOffset;
+                ROSBot.transform.localPosition = flooredPos;
+                ROSBot.transform.localRotation = rotation;
+
+                // Handle target waypoints
+                Vector3 targetWaypoint;
+                if(!dictTargetWaypoint.ContainsKey(ROSBotID)){
+                    // Set default target waypoint to starting position
+                    targetWaypoint = position;
+                    dictTargetWaypoint[ROSBotID] = targetWaypoint;
+                }else{
+                    targetWaypoint = dictTargetWaypoint[ROSBotID];
+                }
+                swarmInterface.setTargetWaypoint(ROSBotID, targetWaypoint);
+            }
+
             // Update Debug Data
             Vector3 OVR_PC_Pos = GO_OVRPlayerController.transform.position;
             Vector3 OVR_CR_Pos = GO_OVRCameraRig.transform.position;
@@ -113,7 +168,7 @@ namespace RosSharp.RosBridgeClient{
 
             // Update world transform
             bool getLHandTrigger = OVRInput.Get(OVRInput.Button.PrimaryHandTrigger, OVRInput.Controller.LTouch);
-            bool getRHandTrigger = OVRInput.Get(OVRInput.Button.PrimaryHandTrigger, OVRInput.Controller.LTouch);
+            bool getRHandTrigger = OVRInput.Get(OVRInput.Button.PrimaryHandTrigger, OVRInput.Controller.RTouch);
             if(getLHandTrigger && getRHandTrigger){
                 if(!editingWorld){
                     // Start editing the world
@@ -153,14 +208,22 @@ namespace RosSharp.RosBridgeClient{
             // Update marker position
             if(OVRInput.Get(OVRInput.Button.PrimaryIndexTrigger, OVRInput.Controller.RTouch)){
                 Vector3 contPos = GO_ControllerRight.transform.position;
-                GO_Marker.transform.position = new Vector3(contPos.x, 0, contPos.z);
+                Vector3 worldPos = GO_World.transform.position;
+                float worldScale = GO_World.transform.localScale.x;
+                Vector3 targetWaypoint = 1/worldScale * new Vector3(contPos.x - worldPos.x, 0, contPos.z - worldPos.z);
+                GO_Marker.transform.localPosition = targetWaypoint;
             }
 
+            dictTargetWaypoint["01"] = GO_Marker.transform.localPosition;
+
+            /*
             // Update target waypoint
             Vector3 markPos = GO_Marker.transform.position;
             targetWaypoint = new Vector3(markPos.x, markPos.z, 0);
             if(enableROS) pub.message = ROSHelper.getGeometryVector3(targetWaypoint);
+            */
 
+            /*
             // Get recent pose data
             if(enableROS){
                 MessageTypes.Geometry.PoseStamped pose_Rosbot01 = (MessageTypes.Geometry.PoseStamped) sub.receivedValue;
@@ -172,7 +235,7 @@ namespace RosSharp.RosBridgeClient{
                     GO_ROSBot.transform.position = position_Rosbot01;
                     GO_ROSBot.transform.rotation = rotation_Rosbot01;
                 }
-            }
+            }*/
         }
 
         public void CycleLineColor(){
