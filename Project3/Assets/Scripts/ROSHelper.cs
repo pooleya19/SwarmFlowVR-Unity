@@ -23,6 +23,16 @@ namespace RosSharp.RosBridgeClient{
             MessageTypes.Geometry.Twist newTwist = new MessageTypes.Geometry.Twist{linear = newLinear, angular = newAngular};
             return newTwist;
         }
+
+        public static MessageTypes.Geometry.Vector3 getGeometryVector3(Vector3 vec){
+            MessageTypes.Geometry.Vector3 newVector = new MessageTypes.Geometry.Vector3{x = vec.x, y = vec.y, z = vec.z};
+            return newVector;
+        }
+        
+        public static MessageTypes.Geometry.Vector3 getGeometryVector3(float x, float y, float z){
+            MessageTypes.Geometry.Vector3 newVector = new MessageTypes.Geometry.Vector3{x = x, y = y, z = z};
+            return newVector;
+        }
     }
 
 }

@@ -16,20 +16,20 @@ namespace RosSharp.RosBridgeClient{
 
         private CustomPublisher pub_RosbotVel;
 
-        private CustomSubscriber sub_TestFollower;
-        public string TestFollowerPoseTopicName;
 
         public GameObject GO_ControllerLeft;
         public GameObject GO_ControllerRight;
 
-        public GameObject GO_TestFollower;
+        //private CustomSubscriber sub_TestFollower;
+        //public string TestFollowerPoseTopicName;
+        //public GameObject GO_TestFollower;
 
         void Start(){
             pub = gameObject.AddComponent<CustomPublisher>();
             pub.Init<MessageTypes.Std.String>("/TestString",2);
 
-            sub_TestFollower = gameObject.AddComponent<CustomSubscriber>();
-            sub_TestFollower.Init<MessageTypes.Geometry.PoseStamped>(TestFollowerPoseTopicName);
+            //sub_TestFollower = gameObject.AddComponent<CustomSubscriber>();
+            //sub_TestFollower.Init<MessageTypes.Geometry.PoseStamped>(TestFollowerPoseTopicName);
 
             /*
             pub_ControllerPosLeft = gameObject.AddComponent<CustomPublisher>();
@@ -58,15 +58,21 @@ namespace RosSharp.RosBridgeClient{
             string newData = "Time: " + Time.time.ToString();
             pub.message = new MessageTypes.Std.String{data = newData};
 
+            /*
             MessageTypes.Geometry.PoseStamped value_TestFollower = (MessageTypes.Geometry.PoseStamped) sub_TestFollower.receivedValue;
             if(value_TestFollower != null){
                 MessageTypes.Geometry.Point position = value_TestFollower.pose.position;
                 MessageTypes.Geometry.Quaternion orientation = value_TestFollower.pose.orientation;
                 Vector3 position_TestFollower = new Vector3((float)position.x, (float)position.z, (float)position.y);
-                Quaternion rotation_TestFollower = new Quaternion((float)orientation.x, (float)orientation.y, (float)orientation.z, (float)orientation.w);
+                //Quaternion rotation_TestFollower = new Quaternion((float)orientation.x, (float)orientation.y, (float)orientation.z, (float)orientation.w);
+                Quaternion rotation_TestFollower = new Quaternion(-(float)orientation.x, -(float)orientation.z, -(float)orientation.y, (float)orientation.w);
                 GO_TestFollower.transform.position = position_TestFollower;
                 GO_TestFollower.transform.rotation = rotation_TestFollower;
             }
+            */
+            // RIGHT HANDED (z-up)      ->  LEFT HANDED (y-up)
+            // Position:    <x,y,z>     ->  <x,z,y>
+            // Orientation: <x,y,x,w>   ->  <-x,-z,-y,w>
 
             /*
             string frameID = "1";
@@ -81,7 +87,7 @@ namespace RosSharp.RosBridgeClient{
             Vector3 angular = Vector3.zero;
 
             OVRInput.Controller controllerR = OVRInput.Controller.RTouch;
-            OVRInput.Controller controllerL = OVRInput.Controller.LTouch;
+            //OVRInput.Controller controllerL = OVRInput.Controller.LTouch;
             
             Vector2 rightJS = OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick, controllerR);
             Vector2 leftJS = OVRInput.Get(OVRInput.Axis2D.PrimaryThumbstick, controllerR);
