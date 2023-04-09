@@ -78,13 +78,9 @@ namespace RosSharp.RosBridgeClient{
         private SwarmInterface swarmInterface;
         private Dictionary<string, GameObject> dictROSBotGO;
         public Dictionary<string, Vector3> dictTargetWaypoint;
-        private Dictionary<string, GameObject> dictTargetWaypointGO;
-        private Dictionary<string, List<Vector3>> dictBufferedWaypoints;
         public string robotControlName = "";
         public float MultipleBufferWaypointMinGap = 0.5f;
         public float MultipleBufferPlayDelay = 1;
-        private bool playingMultipleBuffer = false;
-        private float lastPlayTime = 0;
         public bool pressedPlay = false;
 
         private MonoBehaviour robotControl = null;
@@ -95,17 +91,9 @@ namespace RosSharp.RosBridgeClient{
 
             dictROSBotGO = new Dictionary<string, GameObject>();
             dictTargetWaypoint = new Dictionary<string, Vector3>();
-            dictTargetWaypointGO = new Dictionary<string, GameObject>();
-            dictBufferedWaypoints = new Dictionary<string, List<Vector3>>();
 
             if(enableROS){
                 swarmInterface = GetComponent<SwarmROSBridge>();
-                /*
-                sub = gameObject.AddComponent<CustomSubscriber>();
-                sub.Init<MessageTypes.Geometry.PoseStamped>(topicSubscribed);
-                pub = gameObject.AddComponent<CustomPublisher>();
-                pub.Init<MessageTypes.Geometry.Vector3>(topicPublished,10);
-                */
             }else{
                 swarmInterface = GetComponent<SwarmSimulator>();
             }
@@ -128,7 +116,6 @@ namespace RosSharp.RosBridgeClient{
             updateDebugData();
             updateInteraction();
             updateWorldTransform();
-            updateMultipleBuffer();
         }
 
         public void CycleLineColor(){
@@ -207,12 +194,10 @@ namespace RosSharp.RosBridgeClient{
             RaycastHit hit;
             if(Physics.Raycast(ray, out hit, raycastDistance, LayerMask_Interaction)){
                 lineRenderer.SetPosition(1, new Vector3(0,0,hit.distance));
-                //Debug.Log("Raycast hit: " + hit.transform.name);
 
                 // Define helpful variables
                 GameObject hitGO = hit.transform.gameObject;
                 int hitLayer = hitGO.layer;
-                //Debug.Log("HitLayer="+hitLayer.ToString()+", LM_ROSBot="+LayerMask_ROSBot.value.ToString()+", LM_MatSafe="+LayerMask_MatSafe.value.ToString());
 
                 bool isROSBot = layerIsInLayerMask(hitLayer, LayerMask_ROSBot);
                 Button button = hit.transform.GetComponent<Button>();
@@ -221,9 +206,6 @@ namespace RosSharp.RosBridgeClient{
 
                 bool clicked_Trigger = OVRInput.GetDown(OVRInput.Button.PrimaryIndexTrigger,OVRInput.Controller.RTouch) || click_Trigger;
                 click_Trigger = false;
-                bool clicked_A = OVRInput.GetDown(OVRInput.Button.One,OVRInput.Controller.RTouch) || click_A;
-                click_A = false;
-                bool holding_A = OVRInput.Get(OVRInput.Button.One, OVRInput.Controller.RTouch) || hold_A;
 
                 // Handle buttons
                 if(clicked_Trigger && isButton){
@@ -279,76 +261,8 @@ namespace RosSharp.RosBridgeClient{
                     }
                 }
 
-                // Handle selecting target waypoints
-                bool updateWaypointInstant = false;
-                updateWaypointInstant |= isMatSafe && clicked_A && robotControlName=="Instant Click";
-                updateWaypointInstant |= isMatSafe && holding_A && robotControlName=="Instant Hold";
-                bool updateWaypointBuffer = isMatSafe && clicked_A && robotControlName=="Single Buffer";
-                if(updateWaypointInstant || updateWaypointBuffer){
-                    if(selectTarget != null){
-                        string ROSBotID = selectTarget.GetComponent<ROSBot>().ID;
-                        Vector3 waypointGlobalSpace = hit.point;
-                        Vector3 waypointWorldSpace = getWaypointWorldSpace(waypointGlobalSpace);
-                        GameObject targetWaypointGO;
-
-                        if(dictTargetWaypointGO.ContainsKey(ROSBotID)){
-                            targetWaypointGO = dictTargetWaypointGO[ROSBotID];
-                        }else{
-                            targetWaypointGO = Instantiate(Prefab_TargetWaypoint, GO_World.transform);
-                            targetWaypointGO.transform.localPosition = waypointWorldSpace;
-                            targetWaypointGO.transform.name = TargetWaypointNamePrefix + ROSBotID;
-                            dictTargetWaypointGO[ROSBotID] = targetWaypointGO;
-                        }
-
-                        targetWaypointGO.transform.localPosition = waypointWorldSpace;
-                        if(updateWaypointInstant){
-                            dictTargetWaypoint[ROSBotID] = waypointWorldSpace;
-                        }
-                        //Debug.Log("Setting target for rosbot=" + ROSBotID + " at (,"+waypointWorldSpace.x+","+waypointWorldSpace.y+","+waypointWorldSpace.z+").");
-                    }
-                }
-
-                // Handle multiple buffered target waypoints
-                if(isMatSafe && holding_A && robotControlName == "Multiple Buffer"){
-                    if(selectTarget != null){
-                        string ROSBotID = selectTarget.GetComponent<ROSBot>().ID;
-                        Vector3 waypointGlobalSpace = hit.point;
-                        Vector3 waypointWorldSpace = getWaypointWorldSpace(waypointGlobalSpace);
-                        if(!dictBufferedWaypoints.ContainsKey(ROSBotID)){
-                            dictBufferedWaypoints[ROSBotID] = new List<Vector3>();
-                        }
-                        // Add new point
-                        if(dictBufferedWaypoints[ROSBotID].Count < 1){
-                            dictBufferedWaypoints[ROSBotID].Add(waypointWorldSpace);
-                        }else{
-                            int count = dictBufferedWaypoints[ROSBotID].Count;
-                            Vector3 lastPoint = dictBufferedWaypoints[ROSBotID][count-1];
-                            float distance = Vector3.Distance(lastPoint, waypointWorldSpace);
-                            if(distance >= MultipleBufferWaypointMinGap){
-                                dictBufferedWaypoints[ROSBotID].Add(waypointWorldSpace);
-                                Debug.Log("Added point. Total points = " + dictBufferedWaypoints[ROSBotID].Count);
-
-                                // Update targetWaypointGO
-                                GameObject targetWaypointGO;
-                                if(dictTargetWaypointGO.ContainsKey(ROSBotID)){
-                                    targetWaypointGO = dictTargetWaypointGO[ROSBotID];
-                                }else{
-                                    targetWaypointGO = Instantiate(Prefab_TargetWaypoint, GO_World.transform);
-                                    targetWaypointGO.transform.localPosition = waypointWorldSpace;
-                                    targetWaypointGO.transform.name = TargetWaypointNamePrefix + ROSBotID;
-                                    dictTargetWaypointGO[ROSBotID] = targetWaypointGO;
-                                }
-                                targetWaypointGO.transform.localPosition = waypointWorldSpace;
-                            }
-                        }
-                    }
-                    
-                }
-
-
             }else{
                 lineRenderer.SetPosition(1, new Vector3(0,0,0));
-                //Debug.Log("No raycast hit");
 
                 // Handle removing highlight
                 if(highlightTarget != null){
@@ -404,7 +318,6 @@ namespace RosSharp.RosBridgeClient{
             robotControlName = targetNameRC;
 
             // Handle old waypoints
-            //Names: Instant Click, Instant Hold, Single Buffer, Multiple Buffer
             bool keepWaypoints = false;
             keepWaypoints |= prevRCName==targetNameRC;
             keepWaypoints |= (prevRCName=="Instant Click" && targetNameRC=="Instant Hold");
@@ -425,10 +338,12 @@ namespace RosSharp.RosBridgeClient{
                 }
             }
 
+            // Delete previous robotControl
             if(robotControl != null){
                 Destroy(robotControl);
             }
 
+            // Create new robotControl
             if(targetNameRC == "Instant Click" || targetNameRC == "Instant Hold"){
                 robotControl = (MonoBehaviour) gameObject.AddComponent<RC_Instant>();
             }
@@ -449,51 +364,6 @@ namespace RosSharp.RosBridgeClient{
 
         public void PlayBuffer(){
             pressedPlay = true;
-            
-            if(robotControlName == "Single Buffer"){
-                Dictionary<string,GameObject>.KeyCollection keys = dictTargetWaypointGO.Keys;
-                foreach(string ROSBotID in keys){
-                    Vector3 waypointWorldSpace = dictTargetWaypointGO[ROSBotID].transform.localPosition;
-                    dictTargetWaypoint[ROSBotID] = waypointWorldSpace;
-                }
-            }else if(robotControlName == "Multiple Buffer"){
-                playingMultipleBuffer = true;
-            }
         }
-
-        private void updateMultipleBuffer(){
-            if(playingMultipleBuffer){
-                float currentTime = Time.time;
-                if(currentTime - lastPlayTime > 1.0/MultipleBufferPlayDelay){
-                    lastPlayTime = currentTime;
-                    Dictionary<string, List<Vector3>>.KeyCollection keys = dictBufferedWaypoints.Keys;
-                    foreach(string ROSBotID in keys){
-                        // Get current target
-                        Vector3 waypointWorldSpace = dictBufferedWaypoints[ROSBotID][0];
-                        dictBufferedWaypoints[ROSBotID].RemoveAt(0);
-                        if(dictBufferedWaypoints[ROSBotID].Count == 0){
-                            playingMultipleBuffer = false;
-                        }
-
-                        // Set target waypoint
-                        dictTargetWaypoint[ROSBotID] = waypointWorldSpace;
-                        
-                        // Update targetWaypointGO
-                        GameObject targetWaypointGO;
-                        if(dictTargetWaypointGO.ContainsKey(ROSBotID)){
-                            targetWaypointGO = dictTargetWaypointGO[ROSBotID];
-                        }else{
-                            targetWaypointGO = Instantiate(Prefab_TargetWaypoint, GO_World.transform);
-                            targetWaypointGO.transform.localPosition = waypointWorldSpace;
-                            targetWaypointGO.transform.name = TargetWaypointNamePrefix + ROSBotID;
-                            dictTargetWaypointGO[ROSBotID] = targetWaypointGO;
-                        }
-                        targetWaypointGO.transform.localPosition = waypointWorldSpace;
-                    }
-                }
-            }
-        }
-
     }
-
 }
