@@ -87,11 +87,8 @@ namespace RosSharp.RosBridgeClient{
         }
 
         void OnDestroy() {
-            Dictionary<string, GameObject>.KeyCollection keys = dictTargetWaypointGO.Keys;
-            foreach(string ROSBotID in keys){
-                GameObject targetWaypointGO = dictTargetWaypointGO[ROSBotID];
-                dictTargetWaypointGO.Remove(ROSBotID);
-                Destroy(targetWaypointGO);
+            foreach(string ROSBotID in dictTargetWaypointGO.Keys){
+                Destroy(dictTargetWaypointGO[ROSBotID]);
             }
         }
     }

@@ -25,6 +25,8 @@ namespace RosSharp.RosBridgeClient{
         public GameObject Prefab_SelectMarker;
         public GameObject Prefab_HighlightMarker;
         public GameObject Prefab_TargetWaypoint;
+        public GameObject Prefab_Menu;
+        public bool createMenu = false;
 
         [Header("Layers")]
         public LayerMask LayerMask_Interaction;
@@ -66,8 +68,11 @@ namespace RosSharp.RosBridgeClient{
         private Vector3 saveWorldScale;
 
         // Interaction
+        private GameObject GO_menu;
+        private Vector3 menuPosition = new Vector3(0.1f,0,0.25f);
+        private Quaternion menuRotation = Quaternion.Euler(0,-45,-90);
+        private Vector3 menuScale = 0.05f * Vector3.one;
         private LineRenderer lineRenderer;
-        private int lineColorNum = 0;
         private GameObject highlightTarget = null;
         private GameObject highlightMarker;
         public GameObject selectTarget = null;
@@ -79,8 +84,8 @@ namespace RosSharp.RosBridgeClient{
         private Dictionary<string, GameObject> dictROSBotGO;
         public Dictionary<string, Vector3> dictTargetWaypoint;
         public string robotControlName = "";
-        public float MultipleBufferWaypointMinGap = 0.5f;
-        public float MultipleBufferPlayDelay = 1;
+        public float MultipleBufferWaypointMinGap = 0.1f;
+        public float MultipleBufferPlayDelay = 0.5f;
         public bool pressedPlay = false;
 
         private MonoBehaviour robotControl = null;
@@ -105,6 +110,15 @@ namespace RosSharp.RosBridgeClient{
             lineRenderer.endWidth = 0.01f;
             lineRenderer.material = MAT_line;
 
+            // Init menu
+            GO_menu = Instantiate(Prefab_Menu);
+            updateMenuPosRot();
+            GO_menu.transform.localScale = menuScale;
+            GO_menu.transform.name = "Menu";
+            MenuHandler menuHandler = GO_menu.GetComponent<MenuHandler>();
+            GO_RC_Buttons = menuHandler.GO_RC_Buttons;
+            menuHandler.outButtonClick = onButtonClick;
+
             // Update button colors
             SetRobotControl("");
         }
@@ -112,23 +126,16 @@ namespace RosSharp.RosBridgeClient{
         // Update is called once per frame
         void Update()
         {
+            updateMenuPosRot();
             updateROSBots();
-            updateDebugData();
+            //updateDebugData();
             updateInteraction();
             updateWorldTransform();
         }
 
-        public void CycleLineColor(){
-            lineColorNum++;
-            if(lineColorNum == 1){
-                MAT_line.color = Color.red;
-            }else if(lineColorNum == 2){
-                MAT_line.color = Color.green;
-            }else if(lineColorNum == 3){
-                lineColorNum = 0;
-                MAT_line.color = Color.blue;
-            }
-            lineRenderer.material = MAT_line;
+        private void updateMenuPosRot(){
+            GO_menu.transform.localPosition = GO_ControllerLeft.transform.position + GO_ControllerLeft.transform.rotation * menuPosition;
+            GO_menu.transform.localRotation = GO_ControllerLeft.transform.rotation * menuRotation;
         }
 
         private void updateROSBots(){
@@ -196,11 +203,12 @@ namespace RosSharp.RosBridgeClient{
                 lineRenderer.SetPosition(1, new Vector3(0,0,hit.distance));
 
                 // Define helpful variables
-                GameObject hitGO = hit.transform.gameObject;
+                Transform hitTransform = hit.collider.transform;
+                GameObject hitGO = hitTransform.gameObject;
                 int hitLayer = hitGO.layer;
 
                 bool isROSBot = layerIsInLayerMask(hitLayer, LayerMask_ROSBot);
-                Button button = hit.transform.GetComponent<Button>();
+                Button button = hitTransform.GetComponent<Button>();
                 bool isButton = button != null;
                 bool isMatSafe = layerIsInLayerMask(hitLayer, LayerMask_MatSafe);
 
@@ -219,12 +227,12 @@ namespace RosSharp.RosBridgeClient{
                         if(selectTarget == null){
                             // Handle new selection
                             selectTarget = hitGO;
-                            selectMarker = Instantiate(Prefab_SelectMarker, hitGO.transform);
+                            selectMarker = Instantiate(Prefab_SelectMarker, hitTransform);
                         }else{
                             if(selectTarget != hitGO){
                                 // Update a selection
                                 selectTarget = hitGO;
-                                selectMarker.transform.parent = hitGO.transform;
+                                selectMarker.transform.parent = hitTransform;
                                 selectMarker.transform.localPosition = Vector3.zero;
                             }else{
                                 // Remove a previous selection
@@ -245,11 +253,11 @@ namespace RosSharp.RosBridgeClient{
                     // Handle new highlight, updating a highlight
                     if(highlightTarget == null){
                         highlightTarget = hitGO;
-                        highlightMarker = Instantiate(Prefab_HighlightMarker, hitGO.transform);
+                        highlightMarker = Instantiate(Prefab_HighlightMarker, hitTransform);
                     }else{
                         if(highlightTarget != hitGO){
                             highlightTarget = hitGO;
-                            highlightMarker.transform.parent = hitGO.transform;
+                            highlightMarker.transform.parent = hitTransform;
                             highlightMarker.transform.localPosition = Vector3.zero;
                         }
                     }
@@ -313,6 +321,14 @@ namespace RosSharp.RosBridgeClient{
             }
         }
         
+        public void onButtonClick(string buttonName){
+            if(buttonName == "Play"){
+                pressedPlay = true;
+            }else{
+                SetRobotControl(buttonName);
+            }
+        }
+
         public void SetRobotControl(string targetNameRC){
             string prevRCName = robotControlName;
             robotControlName = targetNameRC;
@@ -346,6 +362,10 @@ namespace RosSharp.RosBridgeClient{
             // Create new robotControl
             if(targetNameRC == "Instant Click" || targetNameRC == "Instant Hold"){
                 robotControl = (MonoBehaviour) gameObject.AddComponent<RC_Instant>();
+            }else if(targetNameRC == "Single Buffer"){
+                robotControl = (MonoBehaviour) gameObject.AddComponent<RC_SingleBuffer>();
+            }else if(targetNameRC == "Multiple Buffer"){
+                robotControl = (MonoBehaviour) gameObject.AddComponent<RC_MultipleBuffer>();
             }
 
         }
@@ -362,8 +382,5 @@ namespace RosSharp.RosBridgeClient{
             return waypointWorldSpace;
         }
 
-        public void PlayBuffer(){
-            pressedPlay = true;
-        }
     }
 }

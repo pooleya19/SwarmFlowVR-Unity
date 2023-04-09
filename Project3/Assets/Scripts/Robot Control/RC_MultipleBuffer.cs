@@ -71,27 +71,31 @@ namespace RosSharp.RosBridgeClient{
                             }
                             // Add new point
                             int count = dictBufferedWaypoints[ROSBotID].Count;
+                            bool updateTargetWaypoint = false;
                             if(count < 1){
                                 dictBufferedWaypoints[ROSBotID].Add(waypointWorldSpace);
+                                updateTargetWaypoint = true;
                             }else{
                                 Vector3 lastPoint = dictBufferedWaypoints[ROSBotID][count-1];
                                 float distance = Vector3.Distance(lastPoint, waypointWorldSpace);
                                 if(distance >= MultipleBufferWaypointMinGap){
                                     dictBufferedWaypoints[ROSBotID].Add(waypointWorldSpace);
                                     //Debug.Log("Added point. Total points = " + dictBufferedWaypoints[ROSBotID].Count);
-
-                                    // Update targetWaypointGO
-                                    GameObject targetWaypointGO;
-                                    if(dictTargetWaypointGO.ContainsKey(ROSBotID)){
-                                        targetWaypointGO = dictTargetWaypointGO[ROSBotID];
-                                    }else{
-                                        targetWaypointGO = Instantiate(Prefab_TargetWaypoint, swarmManager.GO_World.transform);
-                                        targetWaypointGO.transform.localPosition = waypointWorldSpace;
-                                        targetWaypointGO.transform.name = TargetWaypointNamePrefix + ROSBotID;
-                                        dictTargetWaypointGO[ROSBotID] = targetWaypointGO;
-                                    }
-                                    targetWaypointGO.transform.localPosition = waypointWorldSpace;
+                                    updateTargetWaypoint = true;
                                 }
+                            }
+                            if(updateTargetWaypoint){
+                                // Update targetWaypointGO
+                                GameObject targetWaypointGO;
+                                if(dictTargetWaypointGO.ContainsKey(ROSBotID)){
+                                    targetWaypointGO = dictTargetWaypointGO[ROSBotID];
+                                }else{
+                                    targetWaypointGO = Instantiate(Prefab_TargetWaypoint, swarmManager.GO_World.transform);
+                                    targetWaypointGO.transform.localPosition = waypointWorldSpace;
+                                    targetWaypointGO.transform.name = TargetWaypointNamePrefix + ROSBotID;
+                                    dictTargetWaypointGO[ROSBotID] = targetWaypointGO;
+                                }
+                                targetWaypointGO.transform.localPosition = waypointWorldSpace;
                             }
                         }
                     }
@@ -116,12 +120,13 @@ namespace RosSharp.RosBridgeClient{
                     if(currentTime - lastPlayTime > MultipleBufferPlayDelay){
                         lastPlayTime = currentTime;
 
+                        List<string> keysToRemove = new List<string>();
                         foreach(string ROSBotID in keys){
                             // Safely get next point
                             Vector3 waypointWorldSpace = dictBufferedWaypoints[ROSBotID][0];
                             dictBufferedWaypoints[ROSBotID].RemoveAt(0);
                             if(dictBufferedWaypoints[ROSBotID].Count == 0){
-                                dictBufferedWaypoints.Remove(ROSBotID);
+                                keysToRemove.Add(ROSBotID);
                             }
 
                             // Update targetWaypoint
@@ -139,17 +144,18 @@ namespace RosSharp.RosBridgeClient{
                             }
                             targetWaypointGO.transform.localPosition = waypointWorldSpace;
                         }
+                        // Remove empty keys
+                        foreach(string keyToRemove in keysToRemove){
+                            dictBufferedWaypoints.Remove(keyToRemove);
+                        }
                     }
                 }
             }
         }
 
         void OnDestroy() {
-            Dictionary<string, GameObject>.KeyCollection keys = dictTargetWaypointGO.Keys;
-            foreach(string ROSBotID in keys){
-                GameObject targetWaypointGO = dictTargetWaypointGO[ROSBotID];
-                dictTargetWaypointGO.Remove(ROSBotID);
-                Destroy(targetWaypointGO);
+            foreach(string ROSBotID in dictTargetWaypointGO.Keys){
+                Destroy(dictTargetWaypointGO[ROSBotID]);
             }
         }
     }
