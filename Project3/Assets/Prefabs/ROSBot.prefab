@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 3315293901928901313}
   - component: {fileID: 3315293901928901318}
   - component: {fileID: 3315293901928901319}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Arrow_Body
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -93,7 +93,7 @@ BoxCollider:
   m_GameObject: {fileID: 3315293901928901317}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
@@ -106,7 +106,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3315293902656833702}
-  m_Layer: 0
+  - component: {fileID: 8422698247035067046}
+  - component: {fileID: 5445611277338722225}
+  m_Layer: 8
   m_Name: ROSBot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -136,6 +138,32 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &8422698247035067046
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3315293902656833703}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.24, y: 0.1, z: 0.18}
+  m_Center: {x: 0, y: 0.05, z: 0}
+--- !u!114 &5445611277338722225
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3315293902656833703}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 603d58e8397ff6d4c8480a2aafd3aaec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ID: 
 --- !u!1 &3315293903195426146
 GameObject:
   m_ObjectHideFlags: 0
@@ -148,7 +176,7 @@ GameObject:
   - component: {fileID: 3315293903195426174}
   - component: {fileID: 3315293903195426175}
   - component: {fileID: 3315293903195426172}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Body
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -229,7 +257,7 @@ BoxCollider:
   m_GameObject: {fileID: 3315293903195426146}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
@@ -245,7 +273,7 @@ GameObject:
   - component: {fileID: 9213417844226471994}
   - component: {fileID: 5241497110961257053}
   - component: {fileID: 1461172044327437921}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Wheel_BackLeft
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -326,7 +354,7 @@ CapsuleCollider:
   m_GameObject: {fileID: 3747574525792684016}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Enabled: 1
+  m_Enabled: 0
   m_Radius: 0.5000001
   m_Height: 2
   m_Direction: 1
@@ -343,7 +371,7 @@ GameObject:
   - component: {fileID: 1983050009321878984}
   - component: {fileID: 3569903685729027124}
   - component: {fileID: 6638396476505580885}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Wheel_FrontLeft
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -424,7 +452,7 @@ CapsuleCollider:
   m_GameObject: {fileID: 5473737739211977529}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Enabled: 1
+  m_Enabled: 0
   m_Radius: 0.5000001
   m_Height: 2
   m_Direction: 1
@@ -441,7 +469,7 @@ GameObject:
   - component: {fileID: 6532429081681146350}
   - component: {fileID: 6430442537775081537}
   - component: {fileID: 7506236926824962077}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Arrow_HeadRight
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -522,7 +550,7 @@ BoxCollider:
   m_GameObject: {fileID: 5790989433592049960}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
@@ -538,7 +566,7 @@ GameObject:
   - component: {fileID: 4860222892397825509}
   - component: {fileID: 4633392838501577332}
   - component: {fileID: 3983488575964050920}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Arrow_HeadLeft
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -619,7 +647,7 @@ BoxCollider:
   m_GameObject: {fileID: 6127381486081968355}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
@@ -635,7 +663,7 @@ GameObject:
   - component: {fileID: 6507613087700707778}
   - component: {fileID: 2899225446928450580}
   - component: {fileID: 4676421014136669829}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Wheel_BackRight
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -716,7 +744,7 @@ CapsuleCollider:
   m_GameObject: {fileID: 6937009208950012165}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Enabled: 1
+  m_Enabled: 0
   m_Radius: 0.5000001
   m_Height: 2
   m_Direction: 1
@@ -733,7 +761,7 @@ GameObject:
   - component: {fileID: 4016819571244434002}
   - component: {fileID: 2523295770881701380}
   - component: {fileID: 3871699999442587733}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Wheel_FrontRight
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -814,7 +842,7 @@ CapsuleCollider:
   m_GameObject: {fileID: 9108709244667521872}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Enabled: 1
+  m_Enabled: 0
   m_Radius: 0.5000001
   m_Height: 2
   m_Direction: 1

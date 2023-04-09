@@ -52,7 +52,6 @@ public class SwarmSimulator : SwarmInterface
 
     void FixedUpdate(){
         foreach(string ROSBotID in ROSBotIDs){
-            if(ROSBotID != "01") continue;
             // Check for valid position and target waypoint
             if(dictPosition.ContainsKey(ROSBotID) && dictTargetWaypoint.ContainsKey(ROSBotID)){
                 Vector3 position = dictPosition[ROSBotID];
