@@ -132,7 +132,7 @@ MonoBehaviour:
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: Play
+          m_StringArgument: Play Buffer
           m_BoolArgument: 0
         m_CallState: 2
 --- !u!65 &3275899160173683081
@@ -501,11 +501,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aaf5935dc50d14142a396e7c9efd8d60, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GO_RC_Buttons:
+  GO_Buttons:
   - {fileID: 3275899160374336037}
   - {fileID: 3275899162150576483}
   - {fileID: 3275899161887669402}
   - {fileID: 3275899161043979035}
+  - {fileID: 3275899160173683084}
 --- !u!1 &3275899161043979035
 GameObject:
   m_ObjectHideFlags: 0

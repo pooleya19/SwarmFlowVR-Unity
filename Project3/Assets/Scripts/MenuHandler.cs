@@ -5,7 +5,7 @@ using UnityEngine;
 public class MenuHandler : MonoBehaviour
 {    
 
-    public GameObject[] GO_RC_Buttons;
+    public GameObject[] GO_Buttons;
     public delegate void Function(string outRCName);
     public Function outButtonClick = null;
 

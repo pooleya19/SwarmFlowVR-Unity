@@ -14,10 +14,14 @@ namespace RosSharp.RosBridgeClient{
         private LayerMask LayerMask_ROSBot;
         private LayerMask LayerMask_MatSafe;
         private GameObject Prefab_TargetWaypoint;
+        private GameObject Prefab_WaypointPath;
 
         private Dictionary<string, GameObject> dictTargetWaypointGO;
+        private Dictionary<string, GameObject> dictWaypointPathGO;
 
         private string TargetWaypointNamePrefix = "Waypoint";
+        private string WaypointPathNamePrefix = "Path";
+        private float waypointPathMinDistance = 0.1f;
 
         void Start(){
             // Get SwarmManager
@@ -30,8 +34,10 @@ namespace RosSharp.RosBridgeClient{
             LayerMask_ROSBot = swarmManager.LayerMask_ROSBot;
             LayerMask_MatSafe = swarmManager.LayerMask_MatSafe;
             Prefab_TargetWaypoint = swarmManager.Prefab_TargetWaypoint;
+            Prefab_WaypointPath = swarmManager.Prefab_WaypointPath;
 
             dictTargetWaypointGO = new Dictionary<string, GameObject>();
+            dictWaypointPathGO = new Dictionary<string, GameObject>();
         }
 
         void Update(){
@@ -75,11 +81,40 @@ namespace RosSharp.RosBridgeClient{
                     }
                 }
             }
+
+            // Update waypointPathGO
+            foreach(string ROSBotID in dictTargetWaypointGO.Keys){
+                Vector3 waypointWorldSpace = dictTargetWaypointGO[ROSBotID].transform.localPosition;
+                Vector3 ROSBotPos = swarmManager.swarmInterface.getPosition(ROSBotID);
+                Vector3 posDiff = waypointWorldSpace - ROSBotPos;
+                if(posDiff.magnitude >= waypointPathMinDistance){
+                    GameObject waypointPathGO;
+                    if(dictWaypointPathGO.ContainsKey(ROSBotID)){
+                        waypointPathGO = dictWaypointPathGO[ROSBotID];
+                    }else{
+                        waypointPathGO = Instantiate(Prefab_WaypointPath, swarmManager.GO_World.transform);
+                        waypointPathGO.transform.name = WaypointPathNamePrefix + ROSBotID;
+                        dictWaypointPathGO[ROSBotID] = waypointPathGO;
+                    }
+                    waypointPathGO.transform.localPosition = ROSBotPos;
+                    waypointPathGO.transform.localRotation = Quaternion.FromToRotation(Vector3.forward, posDiff.normalized);
+                    waypointPathGO.transform.localScale = new Vector3(1, 1, posDiff.magnitude);
+                }else{
+                    // Delete path
+                    if(dictWaypointPathGO.ContainsKey(ROSBotID)){
+                        Destroy(dictWaypointPathGO[ROSBotID]);
+                        dictWaypointPathGO.Remove(ROSBotID);
+                    }
+                }
+            }
         }
 
         void OnDestroy() {
             foreach(string ROSBotID in dictTargetWaypointGO.Keys){
                 Destroy(dictTargetWaypointGO[ROSBotID]);
+            }
+            foreach(string ROSBotID in dictWaypointPathGO.Keys){
+                Destroy(dictWaypointPathGO[ROSBotID]);
             }
         }
     }

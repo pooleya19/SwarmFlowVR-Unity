@@ -204,7 +204,7 @@ MonoBehaviour:
   Prefab_HighlightMarker: {fileID: 3318172703187450142, guid: 8e9f43d638eb56748ab993a62641f6b5, type: 3}
   Prefab_TargetWaypoint: {fileID: 7368678288155297114, guid: ecd9cb62374d1ac4d8c9bba3c910ead5, type: 3}
   Prefab_Menu: {fileID: 3275899160777972183, guid: 4b66c29c5e539c740b16289dd9846c60, type: 3}
-  createMenu: 0
+  Prefab_WaypointPath: {fileID: 5528792155244066300, guid: 80da001d2f5c4404098156cc6d858b9f, type: 3}
   LayerMask_Interaction:
     serializedVersion: 2
     m_Bits: 800
@@ -217,12 +217,9 @@ MonoBehaviour:
   topicSubscribed: /rosbot01/pose
   topicPublished: /rosbot01/targetWaypoint
   enableROS: 0
-  GO_RC_Buttons:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  GO_Buttons: []
   Color_Button_Unselected: {r: 1, g: 1, b: 1, a: 1}
+  Color_Button_Highlighted: {r: 0.735849, g: 0.735849, b: 0.735849, a: 1}
   Color_Button_Selected: {r: 0.740566, g: 0.9047949, b: 1, a: 1}
   MAT_line: {fileID: 2100000, guid: 2a23f047e87cc1a45a6649788e9dd6dc, type: 2}
   Text_DebugData: {fileID: 0}
@@ -234,9 +231,10 @@ MonoBehaviour:
   hold_A: 0
   selectTarget: {fileID: 0}
   raycastDistance: 100
+  swarmInterface: {fileID: 0}
   robotControlName: 
   MultipleBufferWaypointMinGap: 0.5
-  MultipleBufferPlayDelay: 1
+  MultipleBufferWaypointNextGap: 0.4
   pressedPlay: 0
 --- !u!114 &77472197
 MonoBehaviour:

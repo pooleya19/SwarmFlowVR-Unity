@@ -26,7 +26,7 @@ namespace RosSharp.RosBridgeClient{
         public GameObject Prefab_HighlightMarker;
         public GameObject Prefab_TargetWaypoint;
         public GameObject Prefab_Menu;
-        public bool createMenu = false;
+        public GameObject Prefab_WaypointPath;
 
         [Header("Layers")]
         public LayerMask LayerMask_Interaction;
@@ -39,9 +39,12 @@ namespace RosSharp.RosBridgeClient{
         public bool enableROS = true;
 
         [Header("Buttons")]
-        public GameObject[] GO_RC_Buttons;
+        public GameObject[] GO_Buttons;
         public Color Color_Button_Unselected;
+        public Color Color_Button_Highlighted;
         public Color Color_Button_Selected;
+        private Button buttonSelected = null;
+        private string playButtonName = "Play Buffer";
 
         [Header("Misc")]
         public Material MAT_line;
@@ -80,12 +83,12 @@ namespace RosSharp.RosBridgeClient{
         public float raycastDistance = 100;
 
         // Robots
-        private SwarmInterface swarmInterface;
+        public SwarmInterface swarmInterface;
         private Dictionary<string, GameObject> dictROSBotGO;
         public Dictionary<string, Vector3> dictTargetWaypoint;
         public string robotControlName = "";
-        public float MultipleBufferWaypointMinGap = 0.1f;
-        public float MultipleBufferPlayDelay = 0.5f;
+        public float MultipleBufferWaypointMinGap = 0.5f;
+        public float MultipleBufferWaypointNextGap = 0.4f;
         public bool pressedPlay = false;
 
         private MonoBehaviour robotControl = null;
@@ -116,7 +119,7 @@ namespace RosSharp.RosBridgeClient{
             GO_menu.transform.localScale = menuScale;
             GO_menu.transform.name = "Menu";
             MenuHandler menuHandler = GO_menu.GetComponent<MenuHandler>();
-            GO_RC_Buttons = menuHandler.GO_RC_Buttons;
+            GO_Buttons = menuHandler.GO_Buttons;
             menuHandler.outButtonClick = onButtonClick;
 
             // Update button colors
@@ -218,6 +221,23 @@ namespace RosSharp.RosBridgeClient{
                 // Handle buttons
                 if(clicked_Trigger && isButton){
                     button.onClick.Invoke();
+
+                    string buttonText = button.transform.GetComponentInChildren<Text>().text;
+                    if(buttonText != playButtonName){
+                        buttonSelected = button;
+                    }
+                }
+                // Handle button colors
+                foreach(GameObject ButtonGO in GO_Buttons){
+                    Button buttonComp = ButtonGO.GetComponent<Button>();
+                    if(buttonComp == buttonSelected){
+                        buttonComp.GetComponent<Image>().color = Color_Button_Selected;
+                    }else{
+                        buttonComp.GetComponent<Image>().color = Color_Button_Unselected;
+                    }
+                }
+                if(isButton){
+                    button.GetComponent<Image>().color = Color_Button_Highlighted;
                 }
 
                 // Handle selecting ROSBots
@@ -322,7 +342,7 @@ namespace RosSharp.RosBridgeClient{
         }
         
         public void onButtonClick(string buttonName){
-            if(buttonName == "Play"){
+            if(buttonName == playButtonName){
                 pressedPlay = true;
             }else{
                 SetRobotControl(buttonName);
@@ -341,17 +361,6 @@ namespace RosSharp.RosBridgeClient{
 
             if(!keepWaypoints){
                 dictTargetWaypoint.Clear();
-            }
-
-            // Update button colors
-            foreach(GameObject GO_RC_Button in GO_RC_Buttons){
-                string buttonNameRC = GO_RC_Button.GetComponentInChildren<Text>().text;
-                //Debug.Log("Comparing "+buttonNameRC+" and "+targetNameRC+".");
-                if(buttonNameRC == targetNameRC){
-                    GO_RC_Button.GetComponent<Image>().color = Color_Button_Selected;
-                }else{
-                    GO_RC_Button.GetComponent<Image>().color = Color_Button_Unselected;
-                }
             }
 
             // Delete previous robotControl
