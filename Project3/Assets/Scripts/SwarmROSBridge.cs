@@ -14,9 +14,13 @@ namespace RosSharp.RosBridgeClient{
 
         private Dictionary<string, Vector3> dictTargetWaypoint;
         private Dictionary<string, Vector3> dictPosition;
+        private Dictionary<string, int> dictPositionSeqNum;
+    
         private Dictionary<string, Quaternion> dictRotation;
         private Dictionary<string, CustomSubscriber> dictSubscriber;
         private Dictionary<string, CustomPublisher> dictPublisher; 
+
+        public float angleCompensator = 90;
 
         void Start(){
             // Initialize dictionaries
@@ -25,6 +29,7 @@ namespace RosSharp.RosBridgeClient{
             dictRotation = new Dictionary<string, Quaternion>();
             dictSubscriber = new Dictionary<string, CustomSubscriber>();
             dictPublisher = new Dictionary<string, CustomPublisher>();
+            dictPositionSeqNum = new Dictionary<string, int>();
         }
 
         void Update(){
@@ -43,12 +48,28 @@ namespace RosSharp.RosBridgeClient{
 
                 MessageTypes.Geometry.PoseStamped poseMsg = (MessageTypes.Geometry.PoseStamped) sub.receivedValue;
                 if(poseMsg != null){
-                    MessageTypes.Geometry.Point pos = poseMsg.pose.position;
-                    MessageTypes.Geometry.Quaternion rot = poseMsg.pose.orientation;
-                    Vector3 position = new Vector3((float)pos.x, (float)pos.z, (float)pos.y);
-                    Quaternion rotation = new Quaternion(-(float)rot.x, -(float)rot.z, -(float)rot.y, (float)rot.w);
-                    dictPosition[ROSBotID] = position;
-                    dictRotation[ROSBotID] = rotation;
+                    int newSeqNum = (int) poseMsg.header.seq;
+                    int oldSeqNum;
+                    if(!dictPositionSeqNum.ContainsKey(ROSBotID)){
+                        oldSeqNum = newSeqNum-1;
+                    }else{
+                        oldSeqNum = dictPositionSeqNum[ROSBotID];
+                    }
+                    if(newSeqNum > oldSeqNum){
+                        dictPositionSeqNum[ROSBotID] = newSeqNum;
+
+                        MessageTypes.Geometry.Point pos = poseMsg.pose.position;
+                        MessageTypes.Geometry.Quaternion rot = poseMsg.pose.orientation;
+                        Vector3 position = new Vector3((float)pos.x, (float)pos.z, (float)pos.y);
+                        Quaternion rotation = new Quaternion(-(float)rot.x, -(float)rot.z, -(float)rot.y, (float)rot.w);
+                        rotation = rotation * Quaternion.AngleAxis(angleCompensator, Vector3.up);
+                        Vector3 forwardAxis = rotation * Vector3.forward;
+                        forwardAxis.y = 0;
+                        rotation = Quaternion.FromToRotation(Vector3.forward, forwardAxis);
+                        dictPosition[ROSBotID] = position;
+                        dictRotation[ROSBotID] = rotation;
+                        dictPositionSeqNum[ROSBotID] = (int) poseMsg.header.seq;
+                    }
                 }
 
                 // Handle rosbot waypoint publisher

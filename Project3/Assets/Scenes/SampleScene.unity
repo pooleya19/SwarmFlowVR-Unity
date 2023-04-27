@@ -216,7 +216,7 @@ MonoBehaviour:
     m_Bits: 512
   topicSubscribed: /rosbot01/pose
   topicPublished: /rosbot01/targetWaypoint
-  enableROS: 0
+  enableROS: 1
   GO_Buttons: []
   Color_Button_Unselected: {r: 1, g: 1, b: 1, a: 1}
   Color_Button_Highlighted: {r: 0.735849, g: 0.735849, b: 0.735849, a: 1}
@@ -274,9 +274,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ROSBotIDs:
   - 01
-  topicROSBotPrefix: /Rosbot
+  - 02
+  topicROSBotPrefix: /rosbot
   topicPoseSuffix: /pose
   topicWaypointSuffix: /targetWaypoint
+  angleCompensator: 90
 --- !u!1 &129832850 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7368678288155297114, guid: ecd9cb62374d1ac4d8c9bba3c910ead5, type: 3}

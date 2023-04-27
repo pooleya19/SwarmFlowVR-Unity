@@ -146,10 +146,11 @@ namespace RosSharp.RosBridgeClient{
             foreach(string ROSBotID in swarmInterface.getROSBotIDs()){
                 // Handle position/rotation
                 Vector3 position = swarmInterface.getPosition(ROSBotID);
+                position.y = ROSBotFloorYOffset;
                 Quaternion rotation = swarmInterface.getRotation(ROSBotID);
 
                 // Check for unset position and skip
-                if(position == Vector3.positiveInfinity) continue;
+                if(position.x == Mathf.Infinity) continue;
 
                 GameObject ROSBot;
                 if(!dictROSBotGO.ContainsKey(ROSBotID)){
@@ -254,6 +255,7 @@ namespace RosSharp.RosBridgeClient{
                                 selectTarget = hitGO;
                                 selectMarker.transform.parent = hitTransform;
                                 selectMarker.transform.localPosition = Vector3.zero;
+                                selectMarker.transform.rotation = Quaternion.identity;
                             }else{
                                 // Remove a previous selection
                                 selectTarget = null;
@@ -279,6 +281,7 @@ namespace RosSharp.RosBridgeClient{
                             highlightTarget = hitGO;
                             highlightMarker.transform.parent = hitTransform;
                             highlightMarker.transform.localPosition = Vector3.zero;
+                            highlightMarker.transform.rotation = Quaternion.identity;
                         }
                     }
                 }else{
