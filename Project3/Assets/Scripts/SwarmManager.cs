@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using RosSharp.RosBridgeClient;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 namespace RosSharp.RosBridgeClient{
 
@@ -34,9 +35,9 @@ namespace RosSharp.RosBridgeClient{
         public LayerMask LayerMask_MatSafe;
 
         [Header("ROS Parameters")]
-        public string topicSubscribed = "/rosbot01/pose";
-        public string topicPublished = "/rosbot01/targetWaypoint";
-        public bool enableROS = true;
+        //public string topicSubscribed = "/rosbot01/pose";
+        //public string topicPublished = "/rosbot01/targetWaypoint";
+        public static bool enableROS = false;
 
         [Header("Buttons")]
         public GameObject[] GO_Buttons;
@@ -126,9 +127,12 @@ namespace RosSharp.RosBridgeClient{
             SetRobotControl("");
         }
 
+        private void reloadScene(){
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        }
+
         // Update is called once per frame
-        void Update()
-        {
+        void Update(){
             updateMenuPosRot();
             updateROSBots();
             //updateDebugData();
@@ -347,6 +351,12 @@ namespace RosSharp.RosBridgeClient{
         public void onButtonClick(string buttonName){
             if(buttonName == playButtonName){
                 pressedPlay = true;
+            }else if(buttonName == "Load ROS"){
+                enableROS = true;
+                reloadScene();
+            }else if(buttonName == "Load Sim"){
+                enableROS = false;
+                reloadScene();
             }else{
                 SetRobotControl(buttonName);
             }
