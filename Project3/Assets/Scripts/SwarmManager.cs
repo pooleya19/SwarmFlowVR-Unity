@@ -102,6 +102,7 @@ namespace RosSharp.RosBridgeClient{
             dictTargetWaypoint = new Dictionary<string, Vector3>();
 
             if(enableROS){
+                GetComponent<RosConnector>().Init();
                 swarmInterface = GetComponent<SwarmROSBridge>();
             }else{
                 swarmInterface = GetComponent<SwarmSimulator>();
@@ -124,10 +125,12 @@ namespace RosSharp.RosBridgeClient{
             menuHandler.outButtonClick = onButtonClick;
 
             // Update button colors
-            SetRobotControl("");
+            //SetRobotControl("");
+            SetRobotControl("Instant Click");
         }
 
         private void reloadScene(){
+            GetComponent<RosConnector>().Close();
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
 

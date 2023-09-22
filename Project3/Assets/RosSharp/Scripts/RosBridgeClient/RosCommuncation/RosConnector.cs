@@ -35,6 +35,7 @@ namespace RosSharp.RosBridgeClient
 
         public virtual void Awake()
         {
+            return;
             IsConnected = new ManualResetEvent(false);
             new Thread(ConnectAndWait).Start();
         }
@@ -71,6 +72,17 @@ namespace RosSharp.RosBridgeClient
         {
             IsConnected.Reset();
             Debug.Log("Disconnected from RosBridge: " + RosBridgeServerUrl);
+        }
+
+        private bool init = false;
+        public void Init(){
+            init = true;
+            IsConnected = new ManualResetEvent(false);
+            new Thread(ConnectAndWait).Start();
+        }
+
+        public void Close(){
+            if(init) RosSocket.Close();
         }
     }
 }
